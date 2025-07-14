@@ -14,6 +14,7 @@ use App\Http\Controllers\W2gsFormController;
 use App\Http\Controllers\FreePlayController;
 use App\Http\Controllers\TeamPlayController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\CardBuildingController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\ReportController;
@@ -42,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('free-plays', FreePlayController::class);
     Route::apiResource('team-plays', TeamPlayController::class);
     Route::apiResource('expenses', ExpenseController::class);
+    Route::apiResource('card-buildings', CardBuildingController::class);
+
     Route::apiResource('expense-categories', ExpenseCategoryController::class);
 
     Route::get('/individual-logs', [LogController::class, 'individualLogs']);

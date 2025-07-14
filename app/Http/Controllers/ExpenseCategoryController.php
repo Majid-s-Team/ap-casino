@@ -20,7 +20,9 @@ class ExpenseCategoryController extends Controller
         ]);
 
         $category = ExpenseCategory::create([
-            'name' => $request->name
+            'name' => $request->name,
+            'location' => $request->location ?? null,
+            'amount' => $request->amount ?? null
         ]);
 
         return $this->apiResponse(201, 'Expense Category Created', $category);

@@ -13,32 +13,33 @@ class GamePlayedController extends Controller
     //     return $this->apiResponse(200, 'All Games', $games);
     // }
     public function index(Request $request)
-{
-    $query = GamePlayed::with('category')->where('user_id', auth()->id());
+    {
+        // $query = GamePlayed::with('category')->where('user_id', auth()->id());
+        $query = GamePlayed::with('category');
 
-    // Filters
-    if ($request->query('category_id')) {
-        $query->where('category_id', $request->query('category_id'));
+        // Filters
+        if ($request->query('category_id')) {
+            $query->where('category_id', $request->query('category_id'));
+        }
+
+        if ($request->query('start_date') && $request->query('end_date')) {
+            $query->whereBetween('created_at', [
+                $request->query('start_date'),
+                $request->query('end_date')
+            ]);
+        }
+
+        if ($request->query('name')) {
+            $query->where('name', 'LIKE', '%' . $request->query('name') . '%');
+        }
+
+        $games = $query->get();
+
+        return $this->apiResponse(200, 'Filtered Games', $games);
     }
 
-    if ($request->query('start_date') && $request->query('end_date')) {
-        $query->whereBetween('created_at', [
-            $request->query('start_date'), 
-            $request->query('end_date')
-        ]);
-    }
 
-    if ($request->query('name')) {
-        $query->where('name', 'LIKE', '%' . $request->query('name') . '%');
-    }
-
-    $games = $query->get();
-
-    return $this->apiResponse(200, 'Filtered Games', $games);
-}
-
-
-     public function store(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string',
