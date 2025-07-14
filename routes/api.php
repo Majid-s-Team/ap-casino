@@ -70,6 +70,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/report/my-reports', [ReportController::class, 'myReports']);
     Route::get('/report/tax', [ReportController::class, 'taxReport']);
 
+    Route::get('/all-logs', [ReportController::class, 'allLogs']);
+
+
 });
 
 

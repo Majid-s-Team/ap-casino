@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\{IndividualLog, TeamLog, HandPay, Casino, GamePlayed};
 use Illuminate\Http\Request;
 use PDF;
+use App\Models\{CardBuilding, Expense, FreePlay, SlotSession, TeamPlay, W2gsForm};
 
 class ReportController extends Controller
 {
@@ -13,7 +14,7 @@ class ReportController extends Controller
         $userId = auth()->id();
 
         $filterGame = $request->game_type_id;
-        $filterType = $request->filter_type; 
+        $filterType = $request->filter_type;
 
         $queryIndividual = IndividualLog::where('user_id', $userId);
         $queryTeam = TeamLog::where('user_id', $userId);
@@ -82,7 +83,7 @@ class ReportController extends Controller
             ->whereBetween('date_time', [$filters['from_date'], $filters['to_date']])
             ->with(['casino', 'game'])
             ->get()
-            ->map(function($log) {
+            ->map(function ($log) {
                 return [
                     'id' => $log->id,
                     'date_time' => $log->date_time,
@@ -101,7 +102,7 @@ class ReportController extends Controller
             ->whereBetween('date_time', [$filters['from_date'], $filters['to_date']])
             ->with(['casino', 'game'])
             ->get()
-            ->map(function($log) {
+            ->map(function ($log) {
                 return [
                     'id' => $log->id,
                     'date_time' => $log->date_time,
@@ -111,7 +112,7 @@ class ReportController extends Controller
                     'repayment' => $log->repayment,
                     'balance' => $log->balance,
                     'note' => $log->note,
-                    
+
                 ];
             });
 
@@ -156,4 +157,124 @@ class ReportController extends Controller
             'hand_pays' => $handPays
         ]);
     }
+
+    public function allLogs(Request $request)
+    {
+        $userId = auth()->id();
+
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $casinoId = $request->input('casino_id');
+        $gameId = $request->input('game_id');
+        $name = $request->input('name');
+
+        $data = [];
+
+        // Card Building
+        if (!$name || $name == 'card_building') {
+            $query = CardBuilding::where('user_id', $userId);
+            if ($startDate && $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate]);
+            }
+            if ($casinoId) {
+                $query->where('casino_id', $casinoId);
+            }
+            $data['card_building'] = $query->get();
+        }
+
+        // Expense
+        if (!$name || $name == 'expense') {
+            $query = Expense::with('category')->where('user_id', $userId);
+            if ($startDate && $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate]);
+            }
+            $data['expense'] = $query->get();
+        }
+
+        // Free Play
+        if (!$name || $name == 'free_play') {
+            $query = FreePlay::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
+            if ($startDate && $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate]);
+            }
+            if ($casinoId) {
+                $query->where('casino_id', $casinoId);
+            }
+            if ($gameId) {
+                $query->where('game_played_id', $gameId);
+            }
+            $data['free_play'] = $query->get();
+        }
+
+        // Slot Session
+        if (!$name || $name == 'slot_session') {
+            $query = SlotSession::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
+            if ($startDate && $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate]);
+            }
+            if ($casinoId) {
+                $query->where('casino_id', $casinoId);
+            }
+            if ($gameId) {
+                $query->where('game_played_id', $gameId);
+            }
+            $data['slot_session'] = $query->get();
+        }
+
+        // Team Play
+        if (!$name || $name == 'team_play') {
+            $query = TeamPlay::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
+            if ($startDate && $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate]);
+            }
+            if ($casinoId) {
+                $query->where('casino_id', $casinoId);
+            }
+            if ($gameId) {
+                $query->where('game_played_id', $gameId);
+            }
+            $data['team_play'] = $query->get();
+        }
+
+        // Team Log
+        if (!$name || $name == 'team_log') {
+            $query = TeamLog::with(['game:id,name', 'casino:id,name'])->where('user_id', $userId);
+            if ($startDate && $endDate) {
+                $query->whereBetween('date_time', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            }
+            if ($casinoId) {
+                $query->where('casino_id', $casinoId);
+            }
+            if ($gameId) {
+                $query->where('game_type_id', $gameId);
+            }
+            $data['team_log'] = $query->get();
+        }
+
+        // Hand Pay
+        if (!$name || $name == 'hand_pay') {
+            $query = HandPay::where('user_id', $userId);
+            $data['hand_pay'] = $query->get();
+        }
+
+        // W2Gs Form
+        if (!$name || $name == 'w2gs_form') {
+            $query = W2gsForm::with('casino:id,name')->where('user_id', $userId);
+            if ($startDate && $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate]);
+            }
+            if ($casinoId) {
+                $query->where('casino_id', $casinoId);
+            }
+            $data['w2gs_form'] = $query->get();
+        }
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'User Data Grouped',
+            'data' => $data
+        ]);
+    }
+
+
 }
