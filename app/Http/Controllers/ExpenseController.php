@@ -56,7 +56,8 @@ class ExpenseController extends Controller
             'end_date' => 'nullable|date',
             'expense_category_id' => 'required|exists:expense_categories,id',
             'location' => 'nullable|string',
-            'amount' => 'nullable|numeric'
+            'amount' => 'nullable|numeric',
+            'name' => 'required|string|max:255'
         ]);
 
         $data = $request->all();
@@ -72,6 +73,7 @@ class ExpenseController extends Controller
             return $this->apiResponse(404, 'Expense Not Found');
 
         $request->validate([
+            'name' => 'string',
             'start_date' => 'date',
             'end_date' => 'date',
             'expense_category_id' => 'exists:expense_categories,id',

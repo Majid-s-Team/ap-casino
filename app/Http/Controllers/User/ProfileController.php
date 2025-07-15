@@ -19,7 +19,7 @@ class ProfileController extends Controller
             'last_name' => 'string',
         ]);
 
-        $request->user()->update($request->only('first_name', 'last_name'));
+        $request->user()->update($request->only('first_name', 'last_name','profile_image'));
 
         return $this->apiResponse(200, 'Profile updated', $request->user());
     }
