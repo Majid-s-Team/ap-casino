@@ -167,43 +167,24 @@ class ReportController extends Controller
         $month = $request->input('month');
         $year = $request->input('year');
         $name = $request->input('name');
-
-        $logs = collect(); // One collection for all types
-
+        $data = [];
         $applyDateFilters = function ($query, $dateColumn) use ($startDate, $endDate, $month, $year) {
             if ($startDate && $endDate) {
-                $query->whereBetween($dateColumn, [$startDate, $endDate]);
-            }
-            if ($month) {
-                $query->whereMonth($dateColumn, $month);
-            }
-            if ($year) {
-                $query->whereYear($dateColumn, $year);
-            }
-        };
-
-        // Helper to merge results with type
-        $mergeLogs = function ($query, $type) use (&$logs) {
-            $query->get()->each(function ($item) use ($type, &$logs) {
-                $item->type = $type;
-                $logs->push($item);
-            });
-        };
-
+                $query->whereBetween($dateColumn, [$startDate, $endDate]); }if ($month) {
+                $query->whereMonth($dateColumn, $month); }if ($year) {
+                $query->whereYear($dateColumn, $year); } };
         if (!$name || $name == 'card_building') {
             $query = CardBuilding::where('user_id', $userId);
             $applyDateFilters($query, 'date');
             if ($casinoId)
                 $query->where('casino_id', $casinoId);
-            $mergeLogs($query, 'card_building');
+            $data['card_building'] = $query->get();
         }
-
         if (!$name || $name == 'expense') {
             $query = Expense::with('category')->where('user_id', $userId);
             $applyDateFilters($query, 'start_date');
-            $mergeLogs($query, 'expense');
+            $data['expense'] = $query->get();
         }
-
         if (!$name || $name == 'free_play') {
             $query = FreePlay::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
             $applyDateFilters($query, 'date');
@@ -211,9 +192,8 @@ class ReportController extends Controller
                 $query->where('casino_id', $casinoId);
             if ($gameId)
                 $query->where('game_played_id', $gameId);
-            $mergeLogs($query, 'free_play');
+            $data['free_play'] = $query->get();
         }
-
         if (!$name || $name == 'slot_session') {
             $query = SlotSession::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
             $applyDateFilters($query, 'date');
@@ -221,9 +201,8 @@ class ReportController extends Controller
                 $query->where('casino_id', $casinoId);
             if ($gameId)
                 $query->where('game_played_id', $gameId);
-            $mergeLogs($query, 'slot_session');
+            $data['slot_session'] = $query->get();
         }
-
         if (!$name || $name == 'team_play') {
             $query = TeamPlay::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
             $applyDateFilters($query, 'start_date');
@@ -231,9 +210,8 @@ class ReportController extends Controller
                 $query->where('casino_id', $casinoId);
             if ($gameId)
                 $query->where('game_played_id', $gameId);
-            $mergeLogs($query, 'team_play');
+            $data['team_play'] = $query->get();
         }
-
         if (!$name || $name == 'team_log') {
             $query = TeamLog::with(['game:id,name', 'casino:id,name'])->where('user_id', $userId);
             $applyDateFilters($query, 'date_time');
@@ -241,28 +219,128 @@ class ReportController extends Controller
                 $query->where('casino_id', $casinoId);
             if ($gameId)
                 $query->where('game_type_id', $gameId);
-            $mergeLogs($query, 'team_log');
+            $data['team_log'] = $query->get();
         }
-
         if (!$name || $name == 'hand_pay') {
             $query = HandPay::where('user_id', $userId);
-            $mergeLogs($query, 'hand_pay');
+            $data['hand_pay'] = $query->get();
         }
-
         if (!$name || $name == 'w2gs_form') {
             $query = W2gsForm::with('casino:id,name')->where('user_id', $userId);
             $applyDateFilters($query, 'date');
             if ($casinoId)
                 $query->where('casino_id', $casinoId);
-            $mergeLogs($query, 'w2gs_form');
+            $data['w2gs_form'] = $query->get();
         }
-
-        return response()->json([
-            'status' => 200,
-            'message' => 'All Logs',
-            'data' => $logs->values()
-        ]);
+        return response()->json(['status' => 200, 'message' => 'User Data Grouped', 'data' => $data]);
     }
+
+    // public function allLogs(Request $request)
+    // {
+    //     $userId = auth()->id();
+    //     $startDate = $request->input('start_date');
+    //     $endDate = $request->input('end_date');
+    //     $casinoId = $request->input('casino_id');
+    //     $gameId = $request->input('game_id');
+    //     $month = $request->input('month');
+    //     $year = $request->input('year');
+    //     $name = $request->input('name');
+
+    //     $logs = collect(); // One collection for all types
+
+    //     $applyDateFilters = function ($query, $dateColumn) use ($startDate, $endDate, $month, $year) {
+    //         if ($startDate && $endDate) {
+    //             $query->whereBetween($dateColumn, [$startDate, $endDate]);
+    //         }
+    //         if ($month) {
+    //             $query->whereMonth($dateColumn, $month);
+    //         }
+    //         if ($year) {
+    //             $query->whereYear($dateColumn, $year);
+    //         }
+    //     };
+
+    //     // Helper to merge results with type
+    //     $mergeLogs = function ($query, $type) use (&$logs) {
+    //         $query->get()->each(function ($item) use ($type, &$logs) {
+    //             $item->type = $type;
+    //             $logs->push($item);
+    //         });
+    //     };
+
+    //     if (!$name || $name == 'card_building') {
+    //         $query = CardBuilding::where('user_id', $userId);
+    //         $applyDateFilters($query, 'date');
+    //         if ($casinoId)
+    //             $query->where('casino_id', $casinoId);
+    //         $mergeLogs($query, 'card_building');
+    //     }
+
+    //     if (!$name || $name == 'expense') {
+    //         $query = Expense::with('category')->where('user_id', $userId);
+    //         $applyDateFilters($query, 'start_date');
+    //         $mergeLogs($query, 'expense');
+    //     }
+
+    //     if (!$name || $name == 'free_play') {
+    //         $query = FreePlay::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
+    //         $applyDateFilters($query, 'date');
+    //         if ($casinoId)
+    //             $query->where('casino_id', $casinoId);
+    //         if ($gameId)
+    //             $query->where('game_played_id', $gameId);
+    //         $mergeLogs($query, 'free_play');
+    //     }
+
+    //     if (!$name || $name == 'slot_session') {
+    //         $query = SlotSession::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
+    //         $applyDateFilters($query, 'date');
+    //         if ($casinoId)
+    //             $query->where('casino_id', $casinoId);
+    //         if ($gameId)
+    //             $query->where('game_played_id', $gameId);
+    //         $mergeLogs($query, 'slot_session');
+    //     }
+
+    //     if (!$name || $name == 'team_play') {
+    //         $query = TeamPlay::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
+    //         $applyDateFilters($query, 'start_date');
+    //         if ($casinoId)
+    //             $query->where('casino_id', $casinoId);
+    //         if ($gameId)
+    //             $query->where('game_played_id', $gameId);
+    //         $mergeLogs($query, 'team_play');
+    //     }
+
+    //     if (!$name || $name == 'team_log') {
+    //         $query = TeamLog::with(['game:id,name', 'casino:id,name'])->where('user_id', $userId);
+    //         $applyDateFilters($query, 'date_time');
+    //         if ($casinoId)
+    //             $query->where('casino_id', $casinoId);
+    //         if ($gameId)
+    //             $query->where('game_type_id', $gameId);
+    //         $mergeLogs($query, 'team_log');
+    //     }
+
+    //     if (!$name || $name == 'hand_pay') {
+    //         $query = HandPay::where('user_id', $userId);
+    //         $mergeLogs($query, 'hand_pay');
+    //     }
+
+    //     if (!$name || $name == 'w2gs_form') {
+    //         $query = W2gsForm::with('casino:id,name')->where('user_id', $userId);
+    //         $applyDateFilters($query, 'date');
+    //         if ($casinoId)
+    //             $query->where('casino_id', $casinoId);
+    //         $mergeLogs($query, 'w2gs_form');
+    //     }
+
+    //     return response()->json([
+    //         'status' => 200,
+    //         'message' => 'All Logs',
+    //         'data' => $logs->values()
+    //     ]);
+    // }
 
 
 }
