@@ -157,122 +157,110 @@ class ReportController extends Controller
             'hand_pays' => $handPays
         ]);
     }
-
     public function allLogs(Request $request)
     {
         $userId = auth()->id();
-
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $casinoId = $request->input('casino_id');
         $gameId = $request->input('game_id');
+        $month = $request->input('month');
+        $year = $request->input('year');
         $name = $request->input('name');
 
-        $data = [];
+        $logs = collect(); // One collection for all types
 
-        // Card Building
+        $applyDateFilters = function ($query, $dateColumn) use ($startDate, $endDate, $month, $year) {
+            if ($startDate && $endDate) {
+                $query->whereBetween($dateColumn, [$startDate, $endDate]);
+            }
+            if ($month) {
+                $query->whereMonth($dateColumn, $month);
+            }
+            if ($year) {
+                $query->whereYear($dateColumn, $year);
+            }
+        };
+
+        // Helper to merge results with type
+        $mergeLogs = function ($query, $type) use (&$logs) {
+            $query->get()->each(function ($item) use ($type, &$logs) {
+                $item->type = $type;
+                $logs->push($item);
+            });
+        };
+
         if (!$name || $name == 'card_building') {
             $query = CardBuilding::where('user_id', $userId);
-            if ($startDate && $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
-            }
-            if ($casinoId) {
+            $applyDateFilters($query, 'date');
+            if ($casinoId)
                 $query->where('casino_id', $casinoId);
-            }
-            $data['card_building'] = $query->get();
+            $mergeLogs($query, 'card_building');
         }
 
-        // Expense
         if (!$name || $name == 'expense') {
             $query = Expense::with('category')->where('user_id', $userId);
-            if ($startDate && $endDate) {
-                $query->whereBetween('start_date', [$startDate, $endDate]);
-            }
-            $data['expense'] = $query->get();
+            $applyDateFilters($query, 'start_date');
+            $mergeLogs($query, 'expense');
         }
 
-        // Free Play
         if (!$name || $name == 'free_play') {
             $query = FreePlay::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
-            if ($startDate && $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
-            }
-            if ($casinoId) {
+            $applyDateFilters($query, 'date');
+            if ($casinoId)
                 $query->where('casino_id', $casinoId);
-            }
-            if ($gameId) {
+            if ($gameId)
                 $query->where('game_played_id', $gameId);
-            }
-            $data['free_play'] = $query->get();
+            $mergeLogs($query, 'free_play');
         }
 
-        // Slot Session
         if (!$name || $name == 'slot_session') {
             $query = SlotSession::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
-            if ($startDate && $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
-            }
-            if ($casinoId) {
+            $applyDateFilters($query, 'date');
+            if ($casinoId)
                 $query->where('casino_id', $casinoId);
-            }
-            if ($gameId) {
+            if ($gameId)
                 $query->where('game_played_id', $gameId);
-            }
-            $data['slot_session'] = $query->get();
+            $mergeLogs($query, 'slot_session');
         }
 
-        // Team Play
         if (!$name || $name == 'team_play') {
             $query = TeamPlay::with(['casino:id,name', 'gamePlayed:id,name'])->where('user_id', $userId);
-            if ($startDate && $endDate) {
-                $query->whereBetween('start_date', [$startDate, $endDate]);
-            }
-            if ($casinoId) {
+            $applyDateFilters($query, 'start_date');
+            if ($casinoId)
                 $query->where('casino_id', $casinoId);
-            }
-            if ($gameId) {
+            if ($gameId)
                 $query->where('game_played_id', $gameId);
-            }
-            $data['team_play'] = $query->get();
+            $mergeLogs($query, 'team_play');
         }
 
-        // Team Log
         if (!$name || $name == 'team_log') {
             $query = TeamLog::with(['game:id,name', 'casino:id,name'])->where('user_id', $userId);
-            if ($startDate && $endDate) {
-                $query->whereBetween('date_time', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
-            }
-            if ($casinoId) {
+            $applyDateFilters($query, 'date_time');
+            if ($casinoId)
                 $query->where('casino_id', $casinoId);
-            }
-            if ($gameId) {
+            if ($gameId)
                 $query->where('game_type_id', $gameId);
-            }
-            $data['team_log'] = $query->get();
+            $mergeLogs($query, 'team_log');
         }
 
-        // Hand Pay
         if (!$name || $name == 'hand_pay') {
             $query = HandPay::where('user_id', $userId);
-            $data['hand_pay'] = $query->get();
+            $mergeLogs($query, 'hand_pay');
         }
 
-        // W2Gs Form
         if (!$name || $name == 'w2gs_form') {
             $query = W2gsForm::with('casino:id,name')->where('user_id', $userId);
-            if ($startDate && $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
-            }
-            if ($casinoId) {
+            $applyDateFilters($query, 'date');
+            if ($casinoId)
                 $query->where('casino_id', $casinoId);
-            }
-            $data['w2gs_form'] = $query->get();
+            $mergeLogs($query, 'w2gs_form');
         }
 
         return response()->json([
             'status' => 200,
-            'message' => 'User Data Grouped',
-            'data' => $data
+            'message' => 'All Logs',
+            'data' => $logs->values()
         ]);
     }
 

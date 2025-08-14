@@ -16,8 +16,9 @@ class CategoryController extends Controller
     }
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required|string']);
-        $category = Category::create(['name' => $request->name]);
+        $request->validate(['name' => 'required|string',    
+        'hex_code' => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/']);
+        $category = Category::create(['name' => $request->name, 'hex_code' => $request->hex_code]);
         return $this->apiResponse(201, 'Category Created', $category);
     }
     public function show($id)
@@ -30,7 +31,7 @@ class CategoryController extends Controller
         $category = Category::find($id);
         if (!$category)
             return $this->apiResponse(404, 'Category Not Found');
-        $category->update($request->only('name'));
+        $category->update($request->only('name', 'hex_code'));
         return $this->apiResponse(200, 'Category Updated', $category);
     }
     public function destroy($id)

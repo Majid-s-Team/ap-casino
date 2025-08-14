@@ -17,6 +17,8 @@ class ProfileController extends Controller
         $request->validate([
             'first_name' => 'string',
             'last_name' => 'string',
+            'username' => 'string|max:255',
+            'dob' => 'date',
         ]);
 
         $request->user()->update($request->only('first_name', 'last_name','profile_image'));

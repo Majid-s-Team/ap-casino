@@ -10,16 +10,20 @@ class TeamPlay extends Model
     use HasFactory;
 
     protected $fillable = [
-    'start_date',
-    'end_date',
-    'amount_won',
-    'game_played_id',
-    'casino_id',
-    'person_name',
-    'photo',
-    'user_id'
-];
-   public function casino()
+        'start_date',
+        'end_date',
+        'amount_won',
+        'game_played_id',
+        'casino_id',
+        'person_name',
+        'people_involved',
+        'photo',
+        'user_id'
+    ];
+    protected $casts = [
+        'people_involved' => 'array'
+    ];
+    public function casino()
     {
         return $this->belongsTo(Casino::class);
     }
@@ -27,7 +31,7 @@ class TeamPlay extends Model
     {
         return $this->belongsTo(GamePlayed::class);
     }
-        public function user()
+    public function user()
     {
         return $this->belongsTo(User::class);
     }

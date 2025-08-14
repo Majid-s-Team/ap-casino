@@ -58,7 +58,9 @@ public function index(Request $request)
             'casino_id' => 'nullable|exists:casinos,id',
             'game_played_id' => 'nullable|exists:game_playeds,id',
             'person_name' => 'nullable|string',
-            'photo' => 'nullable|url'
+            'photo' => 'nullable|url',
+            'people_involved.*' => 'string|max:255', 
+
         ]);
 
         $data = $request->all();
@@ -80,7 +82,9 @@ public function index(Request $request)
             'casino_id' => 'exists:casinos,id',
             'game_played_id' => 'exists:game_playeds,id',
             'person_name' => 'string',
-            'photo' => 'nullable|url'
+            'photo' => 'nullable|url',
+            'people_involved.*' => 'string|max:255', 
+
         ]);
 
         $play->update($request->all());

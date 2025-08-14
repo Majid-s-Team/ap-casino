@@ -57,7 +57,9 @@ class ExpenseController extends Controller
             'expense_category_id' => 'required|exists:expense_categories,id',
             'location' => 'nullable|string',
             'amount' => 'nullable|numeric',
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|max:255',
+            'time' => 'nullable|date_format:H:i',
+            'am_pm' => 'nullable|in:AM,PM',
         ]);
 
         $data = $request->all();
@@ -78,7 +80,9 @@ class ExpenseController extends Controller
             'end_date' => 'date',
             'expense_category_id' => 'exists:expense_categories,id',
             'location' => 'string',
-            'amount' => 'numeric'
+            'amount' => 'numeric',
+            'time' => 'date_format:H:i',
+            'am_pm' => 'in:AM,PM',
         ]);
 
         $expense->update($request->all());

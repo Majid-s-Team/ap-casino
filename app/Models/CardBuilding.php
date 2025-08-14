@@ -20,7 +20,8 @@ class CardBuilding extends Model
         'balance',
         'total',
         'notes',
-        'user_id'
+        'user_id',
+        'pointsEarned'
     ];
 
     public function casino()

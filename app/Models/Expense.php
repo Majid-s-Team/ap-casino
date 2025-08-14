@@ -16,8 +16,10 @@ class Expense extends Model
         'expense_category_id',
         'location',
         'amount',
-        'user_id' 
-    ];
+        'user_id',
+         'am_pm',   
+        'time',
+        ];
 
     public function category()
     {

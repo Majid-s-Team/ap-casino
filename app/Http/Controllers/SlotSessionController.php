@@ -56,7 +56,7 @@ public function index(Request $request)
             'am_pm' => 'required|string',
             'casino_id' => 'required|exists:casinos,id',
             'game_played_id' => 'required|exists:game_playeds,id',
-            'ticket_in' => 'required|numeric',
+            'ticket_in' => 'nullable|numeric',
             'cash_added' => 'required|numeric',
             'cash_in' => 'nullable|numeric',
             'cash_out' => 'required|numeric',

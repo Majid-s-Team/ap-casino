@@ -18,6 +18,8 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
+            'username' => 'required|string|max:255',
+            'dob' => 'required|date', 
             'contact' => 'required|string|unique:users,contact',
             'password' => 'required|string|confirmed|min:6',
             'email' => 'nullable|email|unique:users,email',
@@ -33,6 +35,8 @@ class AuthController extends Controller
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'contact' => $request->contact,
+            'username' => $request->username,
+            'dob' => $request->dob,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'otp' => $otp,

@@ -10,7 +10,7 @@ class CardBuildingController extends Controller
     public function index(Request $request)
     {
         
-        $query = CardBuilding::with('casino:id,name')
+        $query = CardBuilding::with('casino')
             ->where('user_id', auth()->id());
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
@@ -35,6 +35,7 @@ class CardBuildingController extends Controller
             'date' => 'required|date',
             'casino_id' => 'required|exists:casinos,id',
             'card_name' => 'required|string',
+            'pointsEarned' => 'nullable|numeric|min:0',
             'cash_in' => 'nullable|numeric',
             'cash_out' => 'nullable|numeric',
             'balance' => 'nullable|numeric',
@@ -78,6 +79,7 @@ class CardBuildingController extends Controller
             'balance' => 'numeric',
             'total' => 'numeric',
             'notes' => 'nullable|string',
+            'pointsEarned' => 'nullable|numeric|min:0',
         ]);
 
         $item->update($request->all());
